@@ -9,7 +9,7 @@ export const pick = (obj, ...fields) => {
 
   Object.entries(obj).map(([key, value]) => {
     for (let y = 0; y < fields.length; y++) {
-      if (fields[y] === value) {
+      if (fields[y] === key) {
         newObj[key] = value;
       }
     }
