@@ -1,64 +1,98 @@
 export default class ColumnChart {
-  constructor(options) {
-    this.setOptions(options);
+  /** @type {HTMLElement} */
+  element;
+  subElements = {};
+  chartHeight = 50;
+  /** Column Chart
+  * @param data {Number[]} - data to be presented
+  * @param label {string} - chart label
+  * @param link {string} - link to more info
+  * @param value {number} - chart value
+  */
+  constructor({
+    data = [],
+    label = '',
+    link = '',
+    value = 0
+  } = {}) {
+    this.data = data;
+    this.label = label;
+    this.link = link;
+    this.value = value;
+
     this.render();
   }
 
-  setOptions(options) {
-    this.chartHeight = 50;
+  getColumnBody(data) {
+    const maxValue = Math.max(...data);
 
-    if (options === undefined) {
-      return;
-    }
+    return data
+      .map(item => {
+        const scale = this.chartHeight / maxValue;
+        const percent = (item / maxValue * 100).toFixed(0);
 
-    this.data = options.data;
-    this.vabel = options.label;
-    this.link = options.link;
-    this.totalValue = options.value;
+        return `<div style="--value: ${Math.floor(item * scale)}" data-tooltip="${percent}%"></div>`;
+      })
+      .join('');
+  }
+
+  getLink() {
+    return this.link ? `<a class="column-chart__link" href="${this.link}">View all</a>` : '';
+  }
+
+  get template() {
+    return `
+      <div class="column-chart column-chart_loading" style="--chart-height: ${this.chartHeight}">
+        <div class="column-chart__title">
+          Total ${this.label}
+          ${this.getLink()}
+        </div>
+        <div class="column-chart__container">
+          <div data-element="header" class="column-chart__header">
+            ${this.value}
+          </div>
+          <div data-element="body" class="column-chart__chart">
+            ${this.getColumnBody(this.data)}
+          </div>
+        </div>
+      </div>
+    `;
   }
 
   render() {
     const element = document.createElement('div');
 
-    element.innerHTML = `
-      <div class="column-chart ${this.data ? '' : 'column-chart_loading'}" style="--chart-height: 50">
-        <div class="column-chart__title">
-          Total ${this.vabel}
-          <a href="${this.link ? this.link : '/'}" class="column-chart__link">View all</a>
-        </div>
-        <div class="column-chart__container">
-          <div data-element="header" class="column-chart__header">${this.totalValue}</div>
-          <div data-element="body" class="column-chart__chart">${this.data ? this.setCharts(this.data) : ''}</div>
-        </div>
-      </div>
-    `;
+    element.innerHTML = this.template;
 
     this.element = element.firstElementChild;
+
+    if (this.data.length) {
+      this.element.classList.remove('column-chart_loading');
+    }
+
+    this.subElements = this.getSubElements(this.element);
   }
 
-  setCharts(data) {
-    const maxValue = Math.max.apply(null, this.data);
-    let items = '';
+  getSubElements(element) {
+    const elements = element.querySelectorAll('[data-element]');
 
-    data.forEach((value) => {
-      const size = Math.trunc(value * (this.chartHeight / maxValue));
-      const percent = Math.round(value / maxValue * 100);
+    return [...elements].reduce((accum, subElement) => {
+      accum[subElement.dataset.element] = subElement;
 
-      items += `<div style="--value: ${size}" data-tooltip="${percent}%"></div>`;
-    });
-
-    return data.length ? items : '<img src="charts-skeleton.svg" alt="charts-skeleton" />';
+      return accum;
+    }, {});
   }
 
-  update(data) {
-    this.element.querySelector('.column-chart__chart').append(this.setCharts(data));
+  update(bodyData) {
+    this.subElements.body.innerHTML = this.getColumnBody(bodyData);
   }
 
-  remove() {
+  remove () {
     this.element.remove();
   }
 
   destroy() {
     this.remove();
+    this.subElements = {};
   }
 }
