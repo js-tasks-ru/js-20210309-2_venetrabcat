@@ -1,15 +1,15 @@
 export default class SortableTable {
-  fieldElement = document.getElementById('field');
-  orderElement = document.getElementById('order');
+  element;
+  subElements = {};
 
   constructor(header = [], options = {}) {
     this.header = header;
     this.data = options.data;
-    this.setSortOption(this.fieldElement ? this.fieldElement.value : '', this.orderElement ? this.orderElement.value : '');
+    this.setSortOption();
     this.setElement();
   }
 
-  setSortOption(fieldValue, orderValue) {
+  setSortOption(fieldValue = '', orderValue = '') {
     this.fieldValue = fieldValue;
     this.orderValue = orderValue;
   }
@@ -58,34 +58,28 @@ export default class SortableTable {
     }).join('');
   }
 
-  get bodyItems() {
+  get tableRows() {
     return this.data.map(item => {
       return `
         <a href="/products/${item.id}" class="sortable-table__row">
-          ${getFirstImage(item.images)}
-          ${getTableCell(item.title)}
-          ${getTableCell(item.quantity)}
-          ${getTableCell(item.price)}
-          ${getTableCell(item.sales)}
-        </a>
-      `;
+          ${this.getTableRow(item)}
+        </a>`;
     }).join('');
+  }
 
-    function getFirstImage(images = {}) {
-      for (let i = 0; i < images.length; i++) {
-        if (i === 0) {
-          return `<div class="sortable-table__cell">
-                  <img class="sortable-table-image" alt="Image" src="${images[i].url}">
-                </div>`;
-        }
-      }
-    }
+  getTableRow(item) {
+    const cells = this.header.map(({id, template}) => {
+      return {
+        id,
+        template
+      };
+    });
 
-    function getTableCell(value) {
-      if (value) {
-        return `<div class="sortable-table__cell">${value}</div>`;
-      }
-    }
+    return cells.map(({id, template}) => {
+      return template
+        ? template(item[id])
+        : `<div class="sortable-table__cell">${item[id]}</div>`;
+    }).join('');
   }
 
   sort(fieldValue, orderValue) {
@@ -104,7 +98,7 @@ export default class SortableTable {
     });
 
     this.subElements.header.innerHTML = this.headerItems;
-    this.subElements.body.innerHTML = this.bodyItems;
+    this.subElements.body.innerHTML = this.tableRows;
   }
 
   destroy() {

@@ -1,10 +1,14 @@
 export default class NotificationMessage {
-  static notification = [];
+  static notifications;
 
   constructor(message = '', {
     duration = 2000,
     type = 'success',
   } = {}) {
+    if (NotificationMessage.notifications) {
+      NotificationMessage.notifications.remove();
+    }
+
     this.message = message;
     this.duration = duration;
     this.type = type;
@@ -28,24 +32,14 @@ export default class NotificationMessage {
             </div>`;
   }
 
-  show(elem) {
+  show(elem = document.body) {
+    elem.append(this.element);
+
+    NotificationMessage.notifications = this.element;
     this.remove();
-
-    if (elem !== undefined) {
-      elem.append(this.element);
-    } else {
-      document.body.append(this.element);
-    }
-
-    this.timeOut();
   }
 
   remove() {
-    NotificationMessage.notification.forEach(el => el.remove());
-    NotificationMessage.notification.push(this.element);
-  }
-
-  timeOut() {
     setTimeout(() => {
       this.destroy();
     }, this.duration);
