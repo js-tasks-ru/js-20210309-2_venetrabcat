@@ -41,13 +41,9 @@ export default class ColumnChart {
     this.url.searchParams.set('to', to.toISOString());
   }
 
-  async getColumnData() {
-    return await fetchJson(`${this.url}`);
-  }
-
   update(from, to) {
     this.setSearchParams(from, to);
-    this.getColumnData().then((resp) => {
+    return fetchJson(`${this.url}`).then((resp) => {
       this.data = Object.values(resp);
 
       if (this.data.length) {
